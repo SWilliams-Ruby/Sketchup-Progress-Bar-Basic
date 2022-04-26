@@ -1,5 +1,5 @@
 # Subclass the ProgressBarBasic class
-# modify the on screen appearance by defining new methods etc. for a second bar
+# modify the on screen appearance by defining new methods and variables for a second bar
 
 module SW
   class ProgressBarBasicDoubleBar < SW::ProgressBarBasic

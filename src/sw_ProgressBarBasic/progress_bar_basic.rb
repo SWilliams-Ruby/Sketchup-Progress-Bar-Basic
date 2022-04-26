@@ -71,7 +71,7 @@
 # show - show the progress bar
 # hide - hide the proress bar
 # refresh - redraw the progressbar
-# update_interval= - sets the update interval
+# update_interval= - sets the update interval (seconds)
 # update? - returns true at approximately update_interval seconds
 #
 # label - get the label
@@ -108,6 +108,7 @@ module SW
     @@suversion = Sketchup.version.to_i  
     @@active_progressbars = []
     @activated = false
+    
     
     # Exception class for Progress bar user code errors
     class ProgressBarError < RuntimeError; end
@@ -155,7 +156,7 @@ module SW
     # Show the progress bar
     def show()
       look_away() if @lookaway # look away from the model to speed up redraws
-      Sketchup.active_model.tools.push_tool(self)
+      Sketchup.active_model.tools.push_tool(self) 
     end
 
     def hide()
@@ -176,13 +177,14 @@ module SW
    
     # Redraw the progress bar.
     def refresh()
+      #  Check for keyboard input
+      SW::Util.raise_exception_on_escape if defined?(SW::Util.raise_exception_on_escape)
       # time_at_start_of_redraw = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       # Sketchup.active_model.active_view.refresh
       # @redraw_delay = Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_at_start_of_redraw 
       time_at_start_of_redraw = Time.now
       Sketchup.active_model.active_view.refresh
       @redraw_delay = Time.now - time_at_start_of_redraw
-
       # @log ? @log << @redraw_delay : @log = [@redraw_delay]
     end
 
@@ -329,8 +331,8 @@ module SW
       # Label
       if @label
           point = Geom::Point3d.new(x + @text_location[0] * scale,  y + @text_location[1] * scale, 0)
-          view.draw_text(point, @label, @text_options) if  @@suversion >= 16
-          view.draw_text(point, @label) if  @@suversion < 16
+          view.draw_text(point, @label, @text_options) if @@suversion >= 16
+          view.draw_text(point, @label) if @@suversion < 16
       end
     end
     
@@ -352,8 +354,8 @@ module SW
     end
     private :get_outline
     
-    # Scale the 'outline' uniformly by the height and scootch the right side 
-    # points over to the correct width. Translate to the screen  location
+    # Scale the 'outline' uniformly by the height and scooch over the right side 
+    # points to the correct width. Translate to the screen location
     def scale_and_translate(outline, width, height, screen_scale, location)
       tr = Geom::Transformation.scaling(height * screen_scale, height * screen_scale,0)
       outline.collect!{|pt|
@@ -366,7 +368,7 @@ module SW
     end
     private :scale_and_translate
     
-    # Look away from the model to save redraw time Moving the camera so that NO
+    # Look away from the model to save redraw time. Moving the camera so that no
     # part of the model's bounding box falls within the camera frustrum will
     # result in redraw times of less than than 10 milliseconds. As we all know,
     # a very heavy model or a model with shadows turned on can take most of a
